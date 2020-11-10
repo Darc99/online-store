@@ -11,8 +11,12 @@ import {
   IPaginationBaseState,
   JhiPagination,
   JhiItemCount,
+  
 } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { hasAnyAuthority } from 'app/shared/auth/private-route';
+import { AUTHORITIES } from 'app/config/constants';
 
 import { IRootState } from 'app/shared/reducers';
 import { getEntities } from './product.reducer';
@@ -73,16 +77,17 @@ export const Product = (props: IProductProps) => {
       activePage: currentPage,
     });
 
-  const { productList, match, loading, totalItems } = props;
+  const { productList, match, loading, totalItems, isAdmin } = props;
   return (
     <div>
       <h2 id="product-heading">
         <Translate contentKey="storeApp.product.home.title">Products</Translate>
-        <Link to={`${match.url}/new`} className="btn btn-primary float-right jh-create-entity" id="jh-create-entity">
+        {isAdmin && <Link to={`${match.url}/new`} className="btn btn-primary float-right jh-create-entity" id="jh-create-entity">
           <FontAwesomeIcon icon="plus" />
           &nbsp;
           <Translate contentKey="storeApp.product.home.createLabel">Create new Product</Translate>
         </Link>
+        }
       </h2>
       {/* <div className="table-responsive">
         {productList && productList.length > 0 ? (
@@ -272,40 +277,44 @@ export const Product = (props: IProductProps) => {
                             <Translate contentKey={`storeApp.Size.${product.size}`} />
                           </span>
                         </small>
+                        {isAdmin && <div className="btn-group flex-btn-group-container">
+                          
+                          <Button
+                            tag={Link}
+                            to={`${match.url}/${product.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
+                            color="primary"
+                            size="sm"
+                          >
+                            <FontAwesomeIcon icon="pencil-alt" />{' '}
+                            <span className="d-none d-md-inline">
+                              <Translate contentKey="entity.action.edit">Edit</Translate>
+                            </span>
+                          </Button>
+                          <Button
+                            tag={Link}
+                            to={`${match.url}/${product.id}/delete?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
+                            color="danger"
+                            size="sm"
+                          >
+                            <FontAwesomeIcon icon="trash" />{' '}
+                            <span className="d-none d-md-inline">
+                              <Translate contentKey="entity.action.delete">Delete</Translate>
+                            </span>
+                          </Button>
+                        </div>
+                        }
+                        {/* <Button tag={Link} 
+                            to={`${match.url}/${product.id}`} 
+                            color="info" 
+                            size="sm"
+                          >
+                            <FontAwesomeIcon icon="eye" />{' '}
+                            <span className="d-none d-md-inline">
+                              <Translate contentKey="entity.action.view">View</Translate>
+                            </span>
+                          </Button> */}
                       </div>
                     </div>
-                  <td className="text-right">
-                    <div className="btn-group flex-btn-group-container">
-                      <Button tag={Link} to={`${match.url}/${product.id}`} color="info" size="sm">
-                        <FontAwesomeIcon icon="eye" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.view">View</Translate>
-                        </span>
-                      </Button>
-                      <Button
-                        tag={Link}
-                        to={`${match.url}/${product.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
-                        color="primary"
-                        size="sm"
-                      >
-                        <FontAwesomeIcon icon="pencil-alt" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.edit">Edit</Translate>
-                        </span>
-                      </Button>
-                      <Button
-                        tag={Link}
-                        to={`${match.url}/${product.id}/delete?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
-                        color="danger"
-                        size="sm"
-                      >
-                        <FontAwesomeIcon icon="trash" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.delete">Delete</Translate>
-                        </span>
-                      </Button>
-                    </div>
-                  </td>
                   </a>
                 </div>
               ))}
@@ -351,10 +360,11 @@ export const Product = (props: IProductProps) => {
   );
 };
 
-const mapStateToProps = ({ product }: IRootState) => ({
+const mapStateToProps = ({ product, authentication }: IRootState) => ({
   productList: product.entities,
   loading: product.loading,
   totalItems: product.totalItems,
+  isAdmin: hasAnyAuthority(authentication.account.authorities, [AUTHORITIES.ADMIN])
 });
 
 const mapDispatchToProps = {
