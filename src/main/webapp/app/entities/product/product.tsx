@@ -84,7 +84,7 @@ export const Product = (props: IProductProps) => {
           <Translate contentKey="storeApp.product.home.createLabel">Create new Product</Translate>
         </Link>
       </h2>
-      <div className="table-responsive">
+      {/* <div className="table-responsive">
         {productList && productList.length > 0 ? (
           <Table responsive>
             <thead>
@@ -192,7 +192,143 @@ export const Product = (props: IProductProps) => {
             </div>
           )
         )}
+      </div> */}
+      <div>
+        {productList && productList.length > 0 ? (
+          <div>
+            <div className="mb-2 d-flex justify-content-end align-items-center">
+              <span className="mx-2 col-1">Sort by</span>
+                <div className="btn-group" role="group">          
+                  <button className="hand btn btn-light" onClick={sort('name')}>
+                    <span className="d-flex">
+                      <Translate contentKey="storeApp.product.name">Name</Translate> 
+                      <FontAwesomeIcon icon="sort" />
+                    </span>
+                  </button>
+                  <button className="hand btn btn-light" onClick={sort('price')}>
+                    <span className="d-flex">
+                      <Translate contentKey="storeApp.product.price">Price</Translate> 
+                      <FontAwesomeIcon icon="sort" />
+                    </span>
+                  </button>
+                  <button className="hand btn btn-light" onClick={sort('size')}>
+                    <span className="d-flex">
+                      <Translate contentKey="storeApp.product.size">Size</Translate> 
+                      <FontAwesomeIcon icon="sort" />
+                    </span>
+                  </button>
+                  <button className="hand btn btn-light" onClick={sort('productCategory')}>
+                    <span className="d-flex">
+                      <Translate contentKey="storeApp.product.productCategory">Product Category</Translate> 
+                      <FontAwesomeIcon icon="sort" />
+                    </span>
+                  </button>
+              </div>
+            </div>
+            
+              {productList.map((product, i) => (
+                <div key={`entity-${i}`} className="list-group">
+                  <a className="list-group-item list-group-item-action flex-column align-items-start">
+                    <div className="row">
+                      <div className="col-2 col-xs-12 justify-content-center">
+                      {product.image ? (
+                        <div>
+                          {product.imageContentType ? (
+                            <a onClick={openFile(product.imageContentType, product.image)}>
+                              <img src={`data:${product.imageContentType};base64,${product.image}`} 
+                              style={{ maxHeight: '150px' }} alt="product image"/>
+                              &nbsp;
+                            </a>
+                          ) : null}
+                          <span>
+                            {product.imageContentType}, {byteSize(product.image)}
+                          </span>
+                        </div>
+                      ) : null}
+                      </div>
+                      <div className="col col-xs-12">
+                        <div className="d-flex justify-content-between">
+                        <Link to={`${match.url}/${product.id}`}>
+                          <h5 className="mb-1">
+                            {product.name}
+                          </h5>
+                        </Link>
+                        <small>
+                        {product.productCategory ? (
+                          <Link to={`product-category/${product.productCategory.id}`}>
+                            {product.productCategory.id}
+                          </Link>
+                          ) : (
+                            ''
+                        )}
+                        </small>
+                      </div>
+                      
+                        <small className="mb-1">{product.description}</small>
+                        <p className="mb-1">Price: {product.price}</p>
+                        <small>
+                          Size: 
+                          <span>
+                            <Translate contentKey={`storeApp.Size.${product.size}`} />
+                          </span>
+                        </small>
+                      </div>
+                    </div>
+                  <td className="text-right">
+                    <div className="btn-group flex-btn-group-container">
+                      <Button tag={Link} to={`${match.url}/${product.id}`} color="info" size="sm">
+                        <FontAwesomeIcon icon="eye" />{' '}
+                        <span className="d-none d-md-inline">
+                          <Translate contentKey="entity.action.view">View</Translate>
+                        </span>
+                      </Button>
+                      <Button
+                        tag={Link}
+                        to={`${match.url}/${product.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
+                        color="primary"
+                        size="sm"
+                      >
+                        <FontAwesomeIcon icon="pencil-alt" />{' '}
+                        <span className="d-none d-md-inline">
+                          <Translate contentKey="entity.action.edit">Edit</Translate>
+                        </span>
+                      </Button>
+                      <Button
+                        tag={Link}
+                        to={`${match.url}/${product.id}/delete?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
+                        color="danger"
+                        size="sm"
+                      >
+                        <FontAwesomeIcon icon="trash" />{' '}
+                        <span className="d-none d-md-inline">
+                          <Translate contentKey="entity.action.delete">Delete</Translate>
+                        </span>
+                      </Button>
+                    </div>
+                  </td>
+                  </a>
+                </div>
+              ))}
+        
+          </div>
+        ) : (
+          !loading && (
+            <div className="alert alert-warning">
+              <Translate contentKey="storeApp.product.home.notFound">No Products found</Translate>
+            </div>
+          )
+        )}
       </div>
+
+
+
+
+
+
+
+
+
+
       {props.totalItems ? (
         <div className={productList && productList.length > 0 ? '' : 'd-none'}>
           <Row className="justify-content-center">
