@@ -67,7 +67,7 @@ export const Product = (props: IProductProps) => {
     setPaginationState({
       ...paginationState,
       order: paginationState.order === 'asc' ? 'desc' : 'asc',
-      sort: p,
+      sort: p, 
     });
   };
 
@@ -207,25 +207,21 @@ export const Product = (props: IProductProps) => {
                   <button className="hand btn btn-light" onClick={sort('name')}>
                     <span className="d-flex">
                       <Translate contentKey="storeApp.product.name">Name</Translate> 
-                      <FontAwesomeIcon icon="sort" />
                     </span>
                   </button>
                   <button className="hand btn btn-light" onClick={sort('price')}>
                     <span className="d-flex">
                       <Translate contentKey="storeApp.product.price">Price</Translate> 
-                      <FontAwesomeIcon icon="sort" />
                     </span>
                   </button>
                   <button className="hand btn btn-light" onClick={sort('size')}>
                     <span className="d-flex">
                       <Translate contentKey="storeApp.product.size">Size</Translate> 
-                      <FontAwesomeIcon icon="sort" />
                     </span>
                   </button>
                   <button className="hand btn btn-light" onClick={sort('productCategory')}>
                     <span className="d-flex">
                       <Translate contentKey="storeApp.product.productCategory">Product Category</Translate> 
-                      <FontAwesomeIcon icon="sort" />
                     </span>
                   </button>
               </div>
@@ -245,9 +241,6 @@ export const Product = (props: IProductProps) => {
                               &nbsp;
                             </a>
                           ) : null}
-                          <span>
-                            {product.imageContentType}, {byteSize(product.image)}
-                          </span>
                         </div>
                       ) : null}
                       </div>
@@ -261,7 +254,7 @@ export const Product = (props: IProductProps) => {
                         <small>
                         {product.productCategory ? (
                           <Link to={`product-category/${product.productCategory.id}`}>
-                            {product.productCategory.id}
+                            Category: {product.productCategory.id}
                           </Link>
                           ) : (
                             ''
@@ -270,13 +263,15 @@ export const Product = (props: IProductProps) => {
                       </div>
                       
                         <small className="mb-1">{product.description}</small>
-                        <p className="mb-1">Price: {product.price}</p>
+                        <p className="mb-1">$ {product.price}</p>
                         <small>
                           Size: 
                           <span>
                             <Translate contentKey={`storeApp.Size.${product.size}`} />
                           </span>
                         </small>
+                        
+                        <div>
                         {isAdmin && <div className="btn-group flex-btn-group-container">
                           
                           <Button
@@ -284,6 +279,7 @@ export const Product = (props: IProductProps) => {
                             to={`${match.url}/${product.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
                             color="primary"
                             size="sm"
+                            className="mr-1"
                           >
                             <FontAwesomeIcon icon="pencil-alt" />{' '}
                             <span className="d-none d-md-inline">
@@ -303,6 +299,7 @@ export const Product = (props: IProductProps) => {
                           </Button>
                         </div>
                         }
+                        </div>
                         {/* <Button tag={Link} 
                             to={`${match.url}/${product.id}`} 
                             color="info" 
