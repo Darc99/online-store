@@ -82,7 +82,7 @@ export const CustomerDetail = (props: ICustomerDetailProps) => {
           <dt>
             <Translate contentKey="storeApp.customer.user">User</Translate>
           </dt>
-          <dd>{customerEntity.user ? customerEntity.user.id : ''}</dd>
+          <dd>{customerEntity.user ? customerEntity.user.login : ''}</dd>
         </dl>
         <Button tag={Link} to="/customer" replace color="info">
           <FontAwesomeIcon icon="arrow-left" />{' '}

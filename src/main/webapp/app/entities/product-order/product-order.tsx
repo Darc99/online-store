@@ -114,7 +114,7 @@ export const ProductOrder = (props: IProductOrderProps) => {
                   </td>
                   <td>{productOrder.code}</td>
                   <td>
-                    {productOrder.customer ? <Link to={`customer/${productOrder.customer.id}`}>{productOrder.customer.id}</Link> : ''}
+                    {productOrder.customer ? <Link to={`customer/${productOrder.customer.id}`}>{productOrder.customer.email}</Link> : ''}
                   </td>
                   <td className="text-right">
                     <div className="btn-group flex-btn-group-container">

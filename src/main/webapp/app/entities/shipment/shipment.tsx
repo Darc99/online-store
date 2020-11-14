@@ -109,7 +109,7 @@ export const Shipment = (props: IShipmentProps) => {
                   <td>{shipment.trackingCode}</td>
                   <td>{shipment.date ? <TextFormat type="date" value={shipment.date} format={APP_DATE_FORMAT} /> : null}</td>
                   <td>{shipment.details}</td>
-                  <td>{shipment.invoice ? <Link to={`invoice/${shipment.invoice.id}`}>{shipment.invoice.id}</Link> : ''}</td>
+                  <td>{shipment.invoice ? <Link to={`invoice/${shipment.invoice.id}`}>{shipment.invoice.code}</Link> : ''}</td>
                   <td className="text-right">
                     <div className="btn-group flex-btn-group-container">
                       <Button tag={Link} to={`${match.url}/${shipment.id}`} color="info" size="sm">

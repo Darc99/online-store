@@ -64,9 +64,15 @@ export const InvoiceDetail = (props: IInvoiceDetailProps) => {
           </dt>
           <dd>{invoiceEntity.paymentAmount}</dd>
           <dt>
+            <span id="code">
+              <Translate contentKey="storeApp.invoice.code">Code</Translate>
+            </span>
+          </dt>
+          <dd>{invoiceEntity.code}</dd>
+          <dt>
             <Translate contentKey="storeApp.invoice.order">Order</Translate>
           </dt>
-          <dd>{invoiceEntity.order ? invoiceEntity.order.id : ''}</dd>
+          <dd>{invoiceEntity.order ? invoiceEntity.order.code : ''}</dd>
         </dl>
         <Button tag={Link} to="/invoice" replace color="info">
           <FontAwesomeIcon icon="arrow-left" />{' '}

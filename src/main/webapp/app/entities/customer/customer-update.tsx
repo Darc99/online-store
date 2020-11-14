@@ -201,16 +201,25 @@ export const CustomerUpdate = (props: ICustomerUpdateProps) => {
                 <Label for="customer-user">
                   <Translate contentKey="storeApp.customer.user">User</Translate>
                 </Label>
-                <AvInput id="customer-user" type="select" className="form-control" name="user.id">
-                  <option value="" key="0" />
+                <AvInput
+                  id="customer-user"
+                  type="select"
+                  className="form-control"
+                  name="user.id"
+                  value={isNew ? users[0] && users[0].id : customerEntity.user?.id}
+                  required
+                >
                   {users
                     ? users.map(otherEntity => (
                         <option value={otherEntity.id} key={otherEntity.id}>
-                          {otherEntity.id}
+                          {otherEntity.login}
                         </option>
                       ))
                     : null}
                 </AvInput>
+                <AvFeedback>
+                  <Translate contentKey="entity.validation.required">This field is required.</Translate>
+                </AvFeedback>
               </AvGroup>
               <Button tag={Link} id="cancel-save" to="/customer" replace color="info">
                 <FontAwesomeIcon icon="arrow-left" />

@@ -114,16 +114,25 @@ export const ShipmentUpdate = (props: IShipmentUpdateProps) => {
                 <Label for="shipment-invoice">
                   <Translate contentKey="storeApp.shipment.invoice">Invoice</Translate>
                 </Label>
-                <AvInput id="shipment-invoice" type="select" className="form-control" name="invoice.id">
-                  <option value="" key="0" />
+                <AvInput
+                  id="shipment-invoice"
+                  type="select"
+                  className="form-control"
+                  name="invoice.id"
+                  value={isNew ? invoices[0] && invoices[0].id : shipmentEntity.invoice?.id}
+                  required
+                >
                   {invoices
                     ? invoices.map(otherEntity => (
                         <option value={otherEntity.id} key={otherEntity.id}>
-                          {otherEntity.id}
+                          {otherEntity.code}
                         </option>
                       ))
                     : null}
                 </AvInput>
+                <AvFeedback>
+                  <Translate contentKey="entity.validation.required">This field is required.</Translate>
+                </AvFeedback>
               </AvGroup>
               <Button tag={Link} id="cancel-save" to="/shipment" replace color="info">
                 <FontAwesomeIcon icon="arrow-left" />

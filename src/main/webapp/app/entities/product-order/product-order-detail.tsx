@@ -50,7 +50,7 @@ export const ProductOrderDetail = (props: IProductOrderDetailProps) => {
           <dt>
             <Translate contentKey="storeApp.productOrder.customer">Customer</Translate>
           </dt>
-          <dd>{productOrderEntity.customer ? productOrderEntity.customer.id : ''}</dd>
+          <dd>{productOrderEntity.customer ? productOrderEntity.customer.email : ''}</dd>
         </dl>
         <Button tag={Link} to="/product-order" replace color="info">
           <FontAwesomeIcon icon="arrow-left" />{' '}

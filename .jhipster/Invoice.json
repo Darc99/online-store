@@ -4,9 +4,7 @@
     {
       "fieldName": "date",
       "fieldType": "Instant",
-      "fieldValidateRules": [
-        "required"
-      ]
+      "fieldValidateRules": ["required"]
     },
     {
       "fieldName": "details",
@@ -16,31 +14,27 @@
       "fieldName": "status",
       "fieldType": "InvoiceStatus",
       "fieldValues": "PAID,ISSUED,CANCELLED",
-      "fieldValidateRules": [
-        "required"
-      ]
+      "fieldValidateRules": ["required"]
     },
     {
       "fieldName": "paymentMethod",
       "fieldType": "PaymentMethod",
       "fieldValues": "CREDIT_CARD,CASH_ON_DELIVERY,PAYPAL",
-      "fieldValidateRules": [
-        "required"
-      ]
+      "fieldValidateRules": ["required"]
     },
     {
       "fieldName": "paymentDate",
       "fieldType": "Instant",
-      "fieldValidateRules": [
-        "required"
-      ]
+      "fieldValidateRules": ["required"]
     },
     {
       "fieldName": "paymentAmount",
       "fieldType": "BigDecimal",
-      "fieldValidateRules": [
-        "required"
-      ]
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "code",
+      "fieldType": "String"
     }
   ],
   "relationships": [
@@ -54,8 +48,9 @@
       "relationshipType": "many-to-one",
       "otherEntityName": "productOrder",
       "otherEntityRelationshipName": "invoice",
+      "relationshipValidateRules": "required",
       "relationshipName": "order",
-      "otherEntityField": "id"
+      "otherEntityField": "code"
     }
   ],
   "changelogDate": "20201106005241",
@@ -68,5 +63,7 @@
   "readOnly": false,
   "embedded": false,
   "clientRootFolder": "",
-  "applications": "*"
+  "applications": ["store"],
+  "searchEngine": false,
+  "databaseType": "sql"
 }
