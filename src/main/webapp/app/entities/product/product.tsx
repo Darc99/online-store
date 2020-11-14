@@ -11,8 +11,12 @@ import {
   IPaginationBaseState,
   JhiPagination,
   JhiItemCount,
+  
 } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import { hasAnyAuthority } from 'app/shared/auth/private-route';
+import { AUTHORITIES } from 'app/config/constants';
 
 import { IRootState } from 'app/shared/reducers';
 import { getEntities } from './product.reducer';
@@ -63,7 +67,7 @@ export const Product = (props: IProductProps) => {
     setPaginationState({
       ...paginationState,
       order: paginationState.order === 'asc' ? 'desc' : 'asc',
-      sort: p,
+      sort: p, 
     });
   };
 
@@ -73,18 +77,19 @@ export const Product = (props: IProductProps) => {
       activePage: currentPage,
     });
 
-  const { productList, match, loading, totalItems } = props;
+  const { productList, match, loading, totalItems, isAdmin } = props;
   return (
     <div>
       <h2 id="product-heading">
         <Translate contentKey="storeApp.product.home.title">Products</Translate>
-        <Link to={`${match.url}/new`} className="btn btn-primary float-right jh-create-entity" id="jh-create-entity">
+        {isAdmin && <Link to={`${match.url}/new`} className="btn btn-primary float-right jh-create-entity" id="jh-create-entity">
           <FontAwesomeIcon icon="plus" />
           &nbsp;
           <Translate contentKey="storeApp.product.home.createLabel">Create new Product</Translate>
         </Link>
+        }
       </h2>
-      <div className="table-responsive">
+      {/* <div className="table-responsive">
         {productList && productList.length > 0 ? (
           <Table responsive>
             <thead>
@@ -144,7 +149,7 @@ export const Product = (props: IProductProps) => {
                   </td>
                   <td>
                     {product.productCategory ? (
-                      <Link to={`product-category/${product.productCategory.id}`}>{product.productCategory.name}</Link>
+                      <Link to={`product-category/${product.productCategory.id}`}>{product.productCategory.id}</Link>
                     ) : (
                       ''
                     )}
@@ -192,7 +197,144 @@ export const Product = (props: IProductProps) => {
             </div>
           )
         )}
+      </div> */}
+      <div>
+        {productList && productList.length > 0 ? (
+          <div>
+            <div className="mb-2 d-flex justify-content-end align-items-center">
+              <span className="mx-2 col-1">Sort by</span>
+                <div className="btn-group" role="group">          
+                  <button className="hand btn btn-light" onClick={sort('name')}>
+                    <span className="d-flex">
+                      <Translate contentKey="storeApp.product.name">Name</Translate> 
+                    </span>
+                  </button>
+                  <button className="hand btn btn-light" onClick={sort('price')}>
+                    <span className="d-flex">
+                      <Translate contentKey="storeApp.product.price">Price</Translate> 
+                    </span>
+                  </button>
+                  <button className="hand btn btn-light" onClick={sort('size')}>
+                    <span className="d-flex">
+                      <Translate contentKey="storeApp.product.size">Size</Translate> 
+                    </span>
+                  </button>
+                  <button className="hand btn btn-light" onClick={sort('productCategory')}>
+                    <span className="d-flex">
+                      <Translate contentKey="storeApp.product.productCategory">Product Category</Translate> 
+                    </span>
+                  </button>
+              </div>
+            </div>
+            
+              {productList.map((product, i) => (
+                <div key={`entity-${i}`} className="list-group">
+                  <a className="list-group-item list-group-item-action flex-column align-items-start">
+                    <div className="row">
+                      <div className="col-2 col-xs-12 justify-content-center">
+                      {product.image ? (
+                        <div>
+                          {product.imageContentType ? (
+                            <a onClick={openFile(product.imageContentType, product.image)}>
+                              <img src={`data:${product.imageContentType};base64,${product.image}`} 
+                              style={{ maxHeight: '150px' }} alt="product image"/>
+                              &nbsp;
+                            </a>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      </div>
+                      <div className="col col-xs-12">
+                        <div className="d-flex justify-content-between">
+                        <Link to={`${match.url}/${product.id}`}>
+                          <h5 className="mb-1">
+                            {product.name}
+                          </h5>
+                        </Link>
+                        <small>
+                        {product.productCategory ? (
+                          <Link to={`product-category/${product.productCategory.id}`}>
+                            Category: {product.productCategory.id}
+                          </Link>
+                          ) : (
+                            ''
+                        )}
+                        </small>
+                      </div>
+                      
+                        <small className="mb-1">{product.description}</small>
+                        <p className="mb-1">$ {product.price}</p>
+                        <small>
+                          Size: 
+                          <span>
+                            <Translate contentKey={`storeApp.Size.${product.size}`} />
+                          </span>
+                        </small>
+                        
+                        <div>
+                        {isAdmin && <div className="btn-group flex-btn-group-container">
+                          
+                          <Button
+                            tag={Link}
+                            to={`${match.url}/${product.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
+                            color="primary"
+                            size="sm"
+                            className="mr-1"
+                          >
+                            <FontAwesomeIcon icon="pencil-alt" />{' '}
+                            <span className="d-none d-md-inline">
+                              <Translate contentKey="entity.action.edit">Edit</Translate>
+                            </span>
+                          </Button>
+                          <Button
+                            tag={Link}
+                            to={`${match.url}/${product.id}/delete?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
+                            color="danger"
+                            size="sm"
+                          >
+                            <FontAwesomeIcon icon="trash" />{' '}
+                            <span className="d-none d-md-inline">
+                              <Translate contentKey="entity.action.delete">Delete</Translate>
+                            </span>
+                          </Button>
+                        </div>
+                        }
+                        </div>
+                        {/* <Button tag={Link} 
+                            to={`${match.url}/${product.id}`} 
+                            color="info" 
+                            size="sm"
+                          >
+                            <FontAwesomeIcon icon="eye" />{' '}
+                            <span className="d-none d-md-inline">
+                              <Translate contentKey="entity.action.view">View</Translate>
+                            </span>
+                          </Button> */}
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              ))}
+        
+          </div>
+        ) : (
+          !loading && (
+            <div className="alert alert-warning">
+              <Translate contentKey="storeApp.product.home.notFound">No Products found</Translate>
+            </div>
+          )
+        )}
       </div>
+
+
+
+
+
+
+
+
+
+
       {props.totalItems ? (
         <div className={productList && productList.length > 0 ? '' : 'd-none'}>
           <Row className="justify-content-center">
@@ -215,10 +357,11 @@ export const Product = (props: IProductProps) => {
   );
 };
 
-const mapStateToProps = ({ product }: IRootState) => ({
+const mapStateToProps = ({ product, authentication }: IRootState) => ({
   productList: product.entities,
   loading: product.loading,
   totalItems: product.totalItems,
+  isAdmin: hasAnyAuthority(authentication.account.authorities, [AUTHORITIES.ADMIN])
 });
 
 const mapDispatchToProps = {
