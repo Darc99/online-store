@@ -4,24 +4,18 @@
     {
       "fieldName": "placedDate",
       "fieldType": "Instant",
-      "fieldValidateRules": [
-        "required"
-      ]
+      "fieldValidateRules": ["required"]
     },
     {
       "fieldName": "status",
       "fieldType": "OrderStatus",
       "fieldValues": "COMPLETED,PENDING,CANCELLED",
-      "fieldValidateRules": [
-        "required"
-      ]
+      "fieldValidateRules": ["required"]
     },
     {
       "fieldName": "code",
       "fieldType": "String",
-      "fieldValidateRules": [
-        "required"
-      ]
+      "fieldValidateRules": ["required"]
     }
   ],
   "relationships": [
@@ -41,8 +35,9 @@
       "relationshipType": "many-to-one",
       "otherEntityName": "customer",
       "otherEntityRelationshipName": "order",
+      "relationshipValidateRules": "required",
       "relationshipName": "customer",
-      "otherEntityField": "id"
+      "otherEntityField": "email"
     }
   ],
   "changelogDate": "20201106005041",
@@ -55,5 +50,5 @@
   "readOnly": false,
   "embedded": false,
   "clientRootFolder": "",
-  "applications": "*"
+  "applications": ["store"]
 }

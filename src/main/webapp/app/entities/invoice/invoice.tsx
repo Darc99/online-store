@@ -101,6 +101,9 @@ export const Invoice = (props: IInvoiceProps) => {
                 <th className="hand" onClick={sort('paymentAmount')}>
                   <Translate contentKey="storeApp.invoice.paymentAmount">Payment Amount</Translate> <FontAwesomeIcon icon="sort" />
                 </th>
+                <th className="hand" onClick={sort('code')}>
+                  <Translate contentKey="storeApp.invoice.code">Code</Translate> <FontAwesomeIcon icon="sort" />
+                </th>
                 <th>
                   <Translate contentKey="storeApp.invoice.order">Order</Translate> <FontAwesomeIcon icon="sort" />
                 </th>
@@ -125,7 +128,8 @@ export const Invoice = (props: IInvoiceProps) => {
                   </td>
                   <td>{invoice.paymentDate ? <TextFormat type="date" value={invoice.paymentDate} format={APP_DATE_FORMAT} /> : null}</td>
                   <td>{invoice.paymentAmount}</td>
-                  <td>{invoice.order ? <Link to={`product-order/${invoice.order.id}`}>{invoice.order.id}</Link> : ''}</td>
+                  <td>{invoice.code}</td>
+                  <td>{invoice.order ? <Link to={`product-order/${invoice.order.id}`}>{invoice.order.code}</Link> : ''}</td>
                   <td className="text-right">
                     <div className="btn-group flex-btn-group-container">
                       <Button tag={Link} to={`${match.url}/${invoice.id}`} color="info" size="sm">

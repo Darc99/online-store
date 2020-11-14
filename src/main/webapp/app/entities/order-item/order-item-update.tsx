@@ -135,31 +135,49 @@ export const OrderItemUpdate = (props: IOrderItemUpdateProps) => {
                 <Label for="order-item-product">
                   <Translate contentKey="storeApp.orderItem.product">Product</Translate>
                 </Label>
-                <AvInput id="order-item-product" type="select" className="form-control" name="product.id">
-                  <option value="" key="0" />
+                <AvInput
+                  id="order-item-product"
+                  type="select"
+                  className="form-control"
+                  name="product.id"
+                  value={isNew ? products[0] && products[0].id : orderItemEntity.product?.id}
+                  required
+                >
                   {products
                     ? products.map(otherEntity => (
                         <option value={otherEntity.id} key={otherEntity.id}>
-                          {otherEntity.id}
+                          {otherEntity.name}
                         </option>
                       ))
                     : null}
                 </AvInput>
+                <AvFeedback>
+                  <Translate contentKey="entity.validation.required">This field is required.</Translate>
+                </AvFeedback>
               </AvGroup>
               <AvGroup>
                 <Label for="order-item-order">
                   <Translate contentKey="storeApp.orderItem.order">Order</Translate>
                 </Label>
-                <AvInput id="order-item-order" type="select" className="form-control" name="order.id">
-                  <option value="" key="0" />
+                <AvInput
+                  id="order-item-order"
+                  type="select"
+                  className="form-control"
+                  name="order.id"
+                  value={isNew ? productOrders[0] && productOrders[0].id : orderItemEntity.order?.id}
+                  required
+                >
                   {productOrders
                     ? productOrders.map(otherEntity => (
                         <option value={otherEntity.id} key={otherEntity.id}>
-                          {otherEntity.id}
+                          {otherEntity.code}
                         </option>
                       ))
                     : null}
                 </AvInput>
+                <AvFeedback>
+                  <Translate contentKey="entity.validation.required">This field is required.</Translate>
+                </AvFeedback>
               </AvGroup>
               <Button tag={Link} id="cancel-save" to="/order-item" replace color="info">
                 <FontAwesomeIcon icon="arrow-left" />

@@ -56,11 +56,15 @@ public class Invoice implements Serializable {
     @Column(name = "payment_amount", precision = 21, scale = 2, nullable = false)
     private BigDecimal paymentAmount;
 
+    @Column(name = "code")
+    private String code;
+
     @OneToMany(mappedBy = "invoice")
     @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Shipment> shipments = new HashSet<>();
 
-    @ManyToOne
+    @ManyToOne(optional = false)
+    @NotNull
     @JsonIgnoreProperties(value = "invoices", allowSetters = true)
     private ProductOrder order;
 
@@ -151,6 +155,19 @@ public class Invoice implements Serializable {
         this.paymentAmount = paymentAmount;
     }
 
+    public String getCode() {
+        return code;
+    }
+
+    public Invoice code(String code) {
+        this.code = code;
+        return this;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
     public Set<Shipment> getShipments() {
         return shipments;
     }
@@ -217,6 +234,7 @@ public class Invoice implements Serializable {
             ", paymentMethod='" + getPaymentMethod() + "'" +
             ", paymentDate='" + getPaymentDate() + "'" +
             ", paymentAmount=" + getPaymentAmount() +
+            ", code='" + getCode() + "'" +
             "}";
     }
 }

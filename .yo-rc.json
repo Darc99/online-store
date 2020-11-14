@@ -38,6 +38,10 @@
     "enableTranslation": true,
     "nativeLanguage": "en",
     "languages": ["en"],
-    "blueprints": []
-  }
+    "blueprints": [],
+    "skipUserManagement": false,
+    "skipClient": false,
+    "skipServer": false
+  },
+  "entities": ["Customer", "Invoice", "OrderItem", "Product", "ProductCategory", "ProductOrder", "Shipment"]
 }

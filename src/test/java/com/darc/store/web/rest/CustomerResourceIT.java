@@ -2,6 +2,7 @@ package com.darc.store.web.rest;
 
 import com.darc.store.StoreApp;
 import com.darc.store.domain.Customer;
+import com.darc.store.domain.User;
 import com.darc.store.repository.CustomerRepository;
 import com.darc.store.service.CustomerService;
 
@@ -40,8 +41,8 @@ public class CustomerResourceIT {
     private static final Gender DEFAULT_GENDER = Gender.MALE;
     private static final Gender UPDATED_GENDER = Gender.FEMALE;
 
-    private static final String DEFAULT_EMAIL = "T6zQ@Uv\"D'.}!>M*";
-    private static final String UPDATED_EMAIL = "5TL^@[8LRX%.1U!wH";
+    private static final String DEFAULT_EMAIL = "Uv\"D'@}!>M*.5TL^";
+    private static final String UPDATED_EMAIL = "[8LRX%@1U!wH.{~cxyH";
 
     private static final String DEFAULT_PHONE = "AAAAAAAAAA";
     private static final String UPDATED_PHONE = "BBBBBBBBBB";
@@ -89,6 +90,11 @@ public class CustomerResourceIT {
             .addressLine2(DEFAULT_ADDRESS_LINE_2)
             .city(DEFAULT_CITY)
             .country(DEFAULT_COUNTRY);
+        // Add required entity
+        User user = UserResourceIT.createEntity(em);
+        em.persist(user);
+        em.flush();
+        customer.setUser(user);
         return customer;
     }
     /**
@@ -108,6 +114,11 @@ public class CustomerResourceIT {
             .addressLine2(UPDATED_ADDRESS_LINE_2)
             .city(UPDATED_CITY)
             .country(UPDATED_COUNTRY);
+        // Add required entity
+        User user = UserResourceIT.createEntity(em);
+        em.persist(user);
+        em.flush();
+        customer.setUser(user);
         return customer;
     }
 
