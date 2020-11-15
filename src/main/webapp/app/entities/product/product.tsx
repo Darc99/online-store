@@ -254,12 +254,12 @@ export const Product = (props: IProductProps) => {
                         <small>
                         {product.productCategory ? (
                           <Link to={`product-category/${product.productCategory.id}`}>
-                            Category: {product.productCategory.id}
+                            Category: {product.productCategory.name}
                           </Link>
-                          ) : (
+                          ) : ( 
                             ''
                         )}
-                        </small>
+                        </small> 
                       </div>
                       
                         <small className="mb-1">{product.description}</small>
