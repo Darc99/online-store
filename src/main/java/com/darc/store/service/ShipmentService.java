@@ -2,6 +2,8 @@ package com.darc.store.service;
 
 import com.darc.store.domain.Shipment;
 import com.darc.store.repository.ShipmentRepository;
+import com.darc.store.security.AuthoritiesConstants;
+import com.darc.store.security.SecurityUtils;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
