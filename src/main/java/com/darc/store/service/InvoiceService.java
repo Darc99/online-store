@@ -49,7 +49,7 @@ public class InvoiceService {
     // return invoiceRepository.findAll(pageable);
     if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
       return invoiceRepository.findAll(pageable);
-    } else return invoiceRepository.findAllByCustomerUserLogin(SecurityUtils.getCurrentUserLogin().get(), pageable);
+    } else return invoiceRepository.findAllByOrderCustomerUserLogin(SecurityUtils.getCurrentUserLogin().get(), pageable);
   }
 
   /**
@@ -64,7 +64,7 @@ public class InvoiceService {
     // return invoiceRepository.findById(id);
     if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
       return invoiceRepository.findById(id);
-    } else return invoiceRepository.findAllByCustomerUserLogin(SecurityUtils.getCurrentUserLogin().get(), pageable);
+    } else return invoiceRepository.findOneByIdAndOrderCustomerUserLogin(id, SecurityUtils.getCurrentUserLogin().get());
   }
 
   /**

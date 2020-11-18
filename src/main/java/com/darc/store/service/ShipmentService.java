@@ -49,7 +49,7 @@ public class ShipmentService {
     // return shipmentRepository.findAll(pageable);
     if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
       return shipmentRepository.findAll(pageable);
-    } else return shipmentRepository.findAllByCustomerUserLogin(SecurityUtils.getCurrentUserLogin().get(), pageable);
+    } else return shipmentRepository.findAllByInvoiceOrderCustomerUserLogin(SecurityUtils.getCurrentUserLogin().get(), pageable);
   }
 
   /**
@@ -64,7 +64,7 @@ public class ShipmentService {
     // return shipmentRepository.findById(id);
     if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)) {
       return shipmentRepository.findById(id);
-    } else return shipmentRepository.findOneByIdAndCustomerUserLogin(id, SecurityUtils.getCurrentUserLogin().get());
+    } else return shipmentRepository.findOneByIdAndInvoiceOrderCustomerUserLogin(id, SecurityUtils.getCurrentUserLogin().get());
   }
 
   /**
