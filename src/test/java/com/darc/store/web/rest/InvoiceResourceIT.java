@@ -1,11 +1,22 @@
 package com.darc.store.web.rest;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.darc.store.StoreApp;
 import com.darc.store.domain.Invoice;
 import com.darc.store.domain.ProductOrder;
+import com.darc.store.domain.enumeration.InvoiceStatus;
+import com.darc.store.domain.enumeration.PaymentMethod;
 import com.darc.store.repository.InvoiceRepository;
 import com.darc.store.service.InvoiceService;
-
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import javax.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,377 +26,352 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import javax.persistence.EntityManager;
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import com.darc.store.domain.enumeration.InvoiceStatus;
-import com.darc.store.domain.enumeration.PaymentMethod;
 /**
  * Integration tests for the {@link InvoiceResource} REST controller.
  */
 @SpringBootTest(classes = StoreApp.class)
 @AutoConfigureMockMvc
-@WithMockUser
+@WithMockUser(username = "admin", authorities = { "ROLE_ADMIN" }, password = "admin")
 public class InvoiceResourceIT {
+  private static final Instant DEFAULT_DATE = Instant.ofEpochMilli(0L);
+  private static final Instant UPDATED_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-    private static final Instant DEFAULT_DATE = Instant.ofEpochMilli(0L);
-    private static final Instant UPDATED_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+  private static final String DEFAULT_DETAILS = "AAAAAAAAAA";
+  private static final String UPDATED_DETAILS = "BBBBBBBBBB";
 
-    private static final String DEFAULT_DETAILS = "AAAAAAAAAA";
-    private static final String UPDATED_DETAILS = "BBBBBBBBBB";
+  private static final InvoiceStatus DEFAULT_STATUS = InvoiceStatus.PAID;
+  private static final InvoiceStatus UPDATED_STATUS = InvoiceStatus.ISSUED;
 
-    private static final InvoiceStatus DEFAULT_STATUS = InvoiceStatus.PAID;
-    private static final InvoiceStatus UPDATED_STATUS = InvoiceStatus.ISSUED;
+  private static final PaymentMethod DEFAULT_PAYMENT_METHOD = PaymentMethod.CREDIT_CARD;
+  private static final PaymentMethod UPDATED_PAYMENT_METHOD = PaymentMethod.CASH_ON_DELIVERY;
 
-    private static final PaymentMethod DEFAULT_PAYMENT_METHOD = PaymentMethod.CREDIT_CARD;
-    private static final PaymentMethod UPDATED_PAYMENT_METHOD = PaymentMethod.CASH_ON_DELIVERY;
+  private static final Instant DEFAULT_PAYMENT_DATE = Instant.ofEpochMilli(0L);
+  private static final Instant UPDATED_PAYMENT_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 
-    private static final Instant DEFAULT_PAYMENT_DATE = Instant.ofEpochMilli(0L);
-    private static final Instant UPDATED_PAYMENT_DATE = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+  private static final BigDecimal DEFAULT_PAYMENT_AMOUNT = new BigDecimal(1);
+  private static final BigDecimal UPDATED_PAYMENT_AMOUNT = new BigDecimal(2);
 
-    private static final BigDecimal DEFAULT_PAYMENT_AMOUNT = new BigDecimal(1);
-    private static final BigDecimal UPDATED_PAYMENT_AMOUNT = new BigDecimal(2);
+  private static final String DEFAULT_CODE = "AAAAAAAAAA";
+  private static final String UPDATED_CODE = "BBBBBBBBBB";
 
-    private static final String DEFAULT_CODE = "AAAAAAAAAA";
-    private static final String UPDATED_CODE = "BBBBBBBBBB";
+  @Autowired
+  private InvoiceRepository invoiceRepository;
 
-    @Autowired
-    private InvoiceRepository invoiceRepository;
+  @Autowired
+  private InvoiceService invoiceService;
 
-    @Autowired
-    private InvoiceService invoiceService;
+  @Autowired
+  private EntityManager em;
 
-    @Autowired
-    private EntityManager em;
+  @Autowired
+  private MockMvc restInvoiceMockMvc;
 
-    @Autowired
-    private MockMvc restInvoiceMockMvc;
+  private Invoice invoice;
 
-    private Invoice invoice;
-
-    /**
-     * Create an entity for this test.
-     *
-     * This is a static method, as tests for other entities might also need it,
-     * if they test an entity which requires the current entity.
-     */
-    public static Invoice createEntity(EntityManager em) {
-        Invoice invoice = new Invoice()
-            .date(DEFAULT_DATE)
-            .details(DEFAULT_DETAILS)
-            .status(DEFAULT_STATUS)
-            .paymentMethod(DEFAULT_PAYMENT_METHOD)
-            .paymentDate(DEFAULT_PAYMENT_DATE)
-            .paymentAmount(DEFAULT_PAYMENT_AMOUNT)
-            .code(DEFAULT_CODE);
-        // Add required entity
-        ProductOrder productOrder;
-        if (TestUtil.findAll(em, ProductOrder.class).isEmpty()) {
-            productOrder = ProductOrderResourceIT.createEntity(em);
-            em.persist(productOrder);
-            em.flush();
-        } else {
-            productOrder = TestUtil.findAll(em, ProductOrder.class).get(0);
-        }
-        invoice.setOrder(productOrder);
-        return invoice;
+  /**
+   * Create an entity for this test.
+   *
+   * This is a static method, as tests for other entities might also need it,
+   * if they test an entity which requires the current entity.
+   */
+  public static Invoice createEntity(EntityManager em) {
+    Invoice invoice = new Invoice()
+      .date(DEFAULT_DATE)
+      .details(DEFAULT_DETAILS)
+      .status(DEFAULT_STATUS)
+      .paymentMethod(DEFAULT_PAYMENT_METHOD)
+      .paymentDate(DEFAULT_PAYMENT_DATE)
+      .paymentAmount(DEFAULT_PAYMENT_AMOUNT)
+      .code(DEFAULT_CODE);
+    // Add required entity
+    ProductOrder productOrder;
+    if (TestUtil.findAll(em, ProductOrder.class).isEmpty()) {
+      productOrder = ProductOrderResourceIT.createEntity(em);
+      em.persist(productOrder);
+      em.flush();
+    } else {
+      productOrder = TestUtil.findAll(em, ProductOrder.class).get(0);
     }
-    /**
-     * Create an updated entity for this test.
-     *
-     * This is a static method, as tests for other entities might also need it,
-     * if they test an entity which requires the current entity.
-     */
-    public static Invoice createUpdatedEntity(EntityManager em) {
-        Invoice invoice = new Invoice()
-            .date(UPDATED_DATE)
-            .details(UPDATED_DETAILS)
-            .status(UPDATED_STATUS)
-            .paymentMethod(UPDATED_PAYMENT_METHOD)
-            .paymentDate(UPDATED_PAYMENT_DATE)
-            .paymentAmount(UPDATED_PAYMENT_AMOUNT)
-            .code(UPDATED_CODE);
-        // Add required entity
-        ProductOrder productOrder;
-        if (TestUtil.findAll(em, ProductOrder.class).isEmpty()) {
-            productOrder = ProductOrderResourceIT.createUpdatedEntity(em);
-            em.persist(productOrder);
-            em.flush();
-        } else {
-            productOrder = TestUtil.findAll(em, ProductOrder.class).get(0);
-        }
-        invoice.setOrder(productOrder);
-        return invoice;
+    invoice.setOrder(productOrder);
+    return invoice;
+  }
+
+  /**
+   * Create an updated entity for this test.
+   *
+   * This is a static method, as tests for other entities might also need it,
+   * if they test an entity which requires the current entity.
+   */
+  public static Invoice createUpdatedEntity(EntityManager em) {
+    Invoice invoice = new Invoice()
+      .date(UPDATED_DATE)
+      .details(UPDATED_DETAILS)
+      .status(UPDATED_STATUS)
+      .paymentMethod(UPDATED_PAYMENT_METHOD)
+      .paymentDate(UPDATED_PAYMENT_DATE)
+      .paymentAmount(UPDATED_PAYMENT_AMOUNT)
+      .code(UPDATED_CODE);
+    // Add required entity
+    ProductOrder productOrder;
+    if (TestUtil.findAll(em, ProductOrder.class).isEmpty()) {
+      productOrder = ProductOrderResourceIT.createUpdatedEntity(em);
+      em.persist(productOrder);
+      em.flush();
+    } else {
+      productOrder = TestUtil.findAll(em, ProductOrder.class).get(0);
     }
+    invoice.setOrder(productOrder);
+    return invoice;
+  }
 
-    @BeforeEach
-    public void initTest() {
-        invoice = createEntity(em);
-    }
+  @BeforeEach
+  public void initTest() {
+    invoice = createEntity(em);
+  }
 
-    @Test
-    @Transactional
-    public void createInvoice() throws Exception {
-        int databaseSizeBeforeCreate = invoiceRepository.findAll().size();
-        // Create the Invoice
-        restInvoiceMockMvc.perform(post("/api/invoices")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(invoice)))
-            .andExpect(status().isCreated());
+  @Test
+  @Transactional
+  public void createInvoice() throws Exception {
+    int databaseSizeBeforeCreate = invoiceRepository.findAll().size();
+    // Create the Invoice
+    restInvoiceMockMvc
+      .perform(post("/api/invoices").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(invoice)))
+      .andExpect(status().isCreated());
 
-        // Validate the Invoice in the database
-        List<Invoice> invoiceList = invoiceRepository.findAll();
-        assertThat(invoiceList).hasSize(databaseSizeBeforeCreate + 1);
-        Invoice testInvoice = invoiceList.get(invoiceList.size() - 1);
-        assertThat(testInvoice.getDate()).isEqualTo(DEFAULT_DATE);
-        assertThat(testInvoice.getDetails()).isEqualTo(DEFAULT_DETAILS);
-        assertThat(testInvoice.getStatus()).isEqualTo(DEFAULT_STATUS);
-        assertThat(testInvoice.getPaymentMethod()).isEqualTo(DEFAULT_PAYMENT_METHOD);
-        assertThat(testInvoice.getPaymentDate()).isEqualTo(DEFAULT_PAYMENT_DATE);
-        assertThat(testInvoice.getPaymentAmount()).isEqualTo(DEFAULT_PAYMENT_AMOUNT);
-        assertThat(testInvoice.getCode()).isEqualTo(DEFAULT_CODE);
-    }
+    // Validate the Invoice in the database
+    List<Invoice> invoiceList = invoiceRepository.findAll();
+    assertThat(invoiceList).hasSize(databaseSizeBeforeCreate + 1);
+    Invoice testInvoice = invoiceList.get(invoiceList.size() - 1);
+    assertThat(testInvoice.getDate()).isEqualTo(DEFAULT_DATE);
+    assertThat(testInvoice.getDetails()).isEqualTo(DEFAULT_DETAILS);
+    assertThat(testInvoice.getStatus()).isEqualTo(DEFAULT_STATUS);
+    assertThat(testInvoice.getPaymentMethod()).isEqualTo(DEFAULT_PAYMENT_METHOD);
+    assertThat(testInvoice.getPaymentDate()).isEqualTo(DEFAULT_PAYMENT_DATE);
+    assertThat(testInvoice.getPaymentAmount()).isEqualTo(DEFAULT_PAYMENT_AMOUNT);
+    assertThat(testInvoice.getCode()).isEqualTo(DEFAULT_CODE);
+  }
 
-    @Test
-    @Transactional
-    public void createInvoiceWithExistingId() throws Exception {
-        int databaseSizeBeforeCreate = invoiceRepository.findAll().size();
+  @Test
+  @Transactional
+  public void createInvoiceWithExistingId() throws Exception {
+    int databaseSizeBeforeCreate = invoiceRepository.findAll().size();
 
-        // Create the Invoice with an existing ID
-        invoice.setId(1L);
+    // Create the Invoice with an existing ID
+    invoice.setId(1L);
 
-        // An entity with an existing ID cannot be created, so this API call must fail
-        restInvoiceMockMvc.perform(post("/api/invoices")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(invoice)))
-            .andExpect(status().isBadRequest());
+    // An entity with an existing ID cannot be created, so this API call must fail
+    restInvoiceMockMvc
+      .perform(post("/api/invoices").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(invoice)))
+      .andExpect(status().isBadRequest());
 
-        // Validate the Invoice in the database
-        List<Invoice> invoiceList = invoiceRepository.findAll();
-        assertThat(invoiceList).hasSize(databaseSizeBeforeCreate);
-    }
+    // Validate the Invoice in the database
+    List<Invoice> invoiceList = invoiceRepository.findAll();
+    assertThat(invoiceList).hasSize(databaseSizeBeforeCreate);
+  }
 
+  @Test
+  @Transactional
+  public void checkDateIsRequired() throws Exception {
+    int databaseSizeBeforeTest = invoiceRepository.findAll().size();
+    // set the field null
+    invoice.setDate(null);
 
-    @Test
-    @Transactional
-    public void checkDateIsRequired() throws Exception {
-        int databaseSizeBeforeTest = invoiceRepository.findAll().size();
-        // set the field null
-        invoice.setDate(null);
+    // Create the Invoice, which fails.
 
-        // Create the Invoice, which fails.
+    restInvoiceMockMvc
+      .perform(post("/api/invoices").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(invoice)))
+      .andExpect(status().isBadRequest());
 
+    List<Invoice> invoiceList = invoiceRepository.findAll();
+    assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
+  }
 
-        restInvoiceMockMvc.perform(post("/api/invoices")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(invoice)))
-            .andExpect(status().isBadRequest());
+  @Test
+  @Transactional
+  public void checkStatusIsRequired() throws Exception {
+    int databaseSizeBeforeTest = invoiceRepository.findAll().size();
+    // set the field null
+    invoice.setStatus(null);
 
-        List<Invoice> invoiceList = invoiceRepository.findAll();
-        assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
-    }
+    // Create the Invoice, which fails.
 
-    @Test
-    @Transactional
-    public void checkStatusIsRequired() throws Exception {
-        int databaseSizeBeforeTest = invoiceRepository.findAll().size();
-        // set the field null
-        invoice.setStatus(null);
+    restInvoiceMockMvc
+      .perform(post("/api/invoices").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(invoice)))
+      .andExpect(status().isBadRequest());
 
-        // Create the Invoice, which fails.
+    List<Invoice> invoiceList = invoiceRepository.findAll();
+    assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
+  }
 
+  @Test
+  @Transactional
+  public void checkPaymentMethodIsRequired() throws Exception {
+    int databaseSizeBeforeTest = invoiceRepository.findAll().size();
+    // set the field null
+    invoice.setPaymentMethod(null);
 
-        restInvoiceMockMvc.perform(post("/api/invoices")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(invoice)))
-            .andExpect(status().isBadRequest());
+    // Create the Invoice, which fails.
 
-        List<Invoice> invoiceList = invoiceRepository.findAll();
-        assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
-    }
+    restInvoiceMockMvc
+      .perform(post("/api/invoices").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(invoice)))
+      .andExpect(status().isBadRequest());
 
-    @Test
-    @Transactional
-    public void checkPaymentMethodIsRequired() throws Exception {
-        int databaseSizeBeforeTest = invoiceRepository.findAll().size();
-        // set the field null
-        invoice.setPaymentMethod(null);
+    List<Invoice> invoiceList = invoiceRepository.findAll();
+    assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
+  }
 
-        // Create the Invoice, which fails.
+  @Test
+  @Transactional
+  public void checkPaymentDateIsRequired() throws Exception {
+    int databaseSizeBeforeTest = invoiceRepository.findAll().size();
+    // set the field null
+    invoice.setPaymentDate(null);
 
+    // Create the Invoice, which fails.
 
-        restInvoiceMockMvc.perform(post("/api/invoices")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(invoice)))
-            .andExpect(status().isBadRequest());
+    restInvoiceMockMvc
+      .perform(post("/api/invoices").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(invoice)))
+      .andExpect(status().isBadRequest());
 
-        List<Invoice> invoiceList = invoiceRepository.findAll();
-        assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
-    }
+    List<Invoice> invoiceList = invoiceRepository.findAll();
+    assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
+  }
 
-    @Test
-    @Transactional
-    public void checkPaymentDateIsRequired() throws Exception {
-        int databaseSizeBeforeTest = invoiceRepository.findAll().size();
-        // set the field null
-        invoice.setPaymentDate(null);
+  @Test
+  @Transactional
+  public void checkPaymentAmountIsRequired() throws Exception {
+    int databaseSizeBeforeTest = invoiceRepository.findAll().size();
+    // set the field null
+    invoice.setPaymentAmount(null);
 
-        // Create the Invoice, which fails.
+    // Create the Invoice, which fails.
 
+    restInvoiceMockMvc
+      .perform(post("/api/invoices").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(invoice)))
+      .andExpect(status().isBadRequest());
 
-        restInvoiceMockMvc.perform(post("/api/invoices")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(invoice)))
-            .andExpect(status().isBadRequest());
+    List<Invoice> invoiceList = invoiceRepository.findAll();
+    assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
+  }
 
-        List<Invoice> invoiceList = invoiceRepository.findAll();
-        assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
-    }
+  @Test
+  @Transactional
+  public void getAllInvoices() throws Exception {
+    // Initialize the database
+    invoiceRepository.saveAndFlush(invoice);
 
-    @Test
-    @Transactional
-    public void checkPaymentAmountIsRequired() throws Exception {
-        int databaseSizeBeforeTest = invoiceRepository.findAll().size();
-        // set the field null
-        invoice.setPaymentAmount(null);
+    // Get all the invoiceList
+    restInvoiceMockMvc
+      .perform(get("/api/invoices?sort=id,desc"))
+      .andExpect(status().isOk())
+      .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+      .andExpect(jsonPath("$.[*].id").value(hasItem(invoice.getId().intValue())))
+      .andExpect(jsonPath("$.[*].date").value(hasItem(DEFAULT_DATE.toString())))
+      .andExpect(jsonPath("$.[*].details").value(hasItem(DEFAULT_DETAILS)))
+      .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
+      .andExpect(jsonPath("$.[*].paymentMethod").value(hasItem(DEFAULT_PAYMENT_METHOD.toString())))
+      .andExpect(jsonPath("$.[*].paymentDate").value(hasItem(DEFAULT_PAYMENT_DATE.toString())))
+      .andExpect(jsonPath("$.[*].paymentAmount").value(hasItem(DEFAULT_PAYMENT_AMOUNT.intValue())))
+      .andExpect(jsonPath("$.[*].code").value(hasItem(DEFAULT_CODE)));
+  }
 
-        // Create the Invoice, which fails.
+  @Test
+  @Transactional
+  public void getInvoice() throws Exception {
+    // Initialize the database
+    invoiceRepository.saveAndFlush(invoice);
 
+    // Get the invoice
+    restInvoiceMockMvc
+      .perform(get("/api/invoices/{id}", invoice.getId()))
+      .andExpect(status().isOk())
+      .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+      .andExpect(jsonPath("$.id").value(invoice.getId().intValue()))
+      .andExpect(jsonPath("$.date").value(DEFAULT_DATE.toString()))
+      .andExpect(jsonPath("$.details").value(DEFAULT_DETAILS))
+      .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
+      .andExpect(jsonPath("$.paymentMethod").value(DEFAULT_PAYMENT_METHOD.toString()))
+      .andExpect(jsonPath("$.paymentDate").value(DEFAULT_PAYMENT_DATE.toString()))
+      .andExpect(jsonPath("$.paymentAmount").value(DEFAULT_PAYMENT_AMOUNT.intValue()))
+      .andExpect(jsonPath("$.code").value(DEFAULT_CODE));
+  }
 
-        restInvoiceMockMvc.perform(post("/api/invoices")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(invoice)))
-            .andExpect(status().isBadRequest());
+  @Test
+  @Transactional
+  public void getNonExistingInvoice() throws Exception {
+    // Get the invoice
+    restInvoiceMockMvc.perform(get("/api/invoices/{id}", Long.MAX_VALUE)).andExpect(status().isNotFound());
+  }
 
-        List<Invoice> invoiceList = invoiceRepository.findAll();
-        assertThat(invoiceList).hasSize(databaseSizeBeforeTest);
-    }
+  @Test
+  @Transactional
+  public void updateInvoice() throws Exception {
+    // Initialize the database
+    invoiceService.save(invoice);
 
-    @Test
-    @Transactional
-    public void getAllInvoices() throws Exception {
-        // Initialize the database
-        invoiceRepository.saveAndFlush(invoice);
+    int databaseSizeBeforeUpdate = invoiceRepository.findAll().size();
 
-        // Get all the invoiceList
-        restInvoiceMockMvc.perform(get("/api/invoices?sort=id,desc"))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(invoice.getId().intValue())))
-            .andExpect(jsonPath("$.[*].date").value(hasItem(DEFAULT_DATE.toString())))
-            .andExpect(jsonPath("$.[*].details").value(hasItem(DEFAULT_DETAILS)))
-            .andExpect(jsonPath("$.[*].status").value(hasItem(DEFAULT_STATUS.toString())))
-            .andExpect(jsonPath("$.[*].paymentMethod").value(hasItem(DEFAULT_PAYMENT_METHOD.toString())))
-            .andExpect(jsonPath("$.[*].paymentDate").value(hasItem(DEFAULT_PAYMENT_DATE.toString())))
-            .andExpect(jsonPath("$.[*].paymentAmount").value(hasItem(DEFAULT_PAYMENT_AMOUNT.intValue())))
-            .andExpect(jsonPath("$.[*].code").value(hasItem(DEFAULT_CODE)));
-    }
-    
-    @Test
-    @Transactional
-    public void getInvoice() throws Exception {
-        // Initialize the database
-        invoiceRepository.saveAndFlush(invoice);
+    // Update the invoice
+    Invoice updatedInvoice = invoiceRepository.findById(invoice.getId()).get();
+    // Disconnect from session so that the updates on updatedInvoice are not directly saved in db
+    em.detach(updatedInvoice);
+    updatedInvoice
+      .date(UPDATED_DATE)
+      .details(UPDATED_DETAILS)
+      .status(UPDATED_STATUS)
+      .paymentMethod(UPDATED_PAYMENT_METHOD)
+      .paymentDate(UPDATED_PAYMENT_DATE)
+      .paymentAmount(UPDATED_PAYMENT_AMOUNT)
+      .code(UPDATED_CODE);
 
-        // Get the invoice
-        restInvoiceMockMvc.perform(get("/api/invoices/{id}", invoice.getId()))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.id").value(invoice.getId().intValue()))
-            .andExpect(jsonPath("$.date").value(DEFAULT_DATE.toString()))
-            .andExpect(jsonPath("$.details").value(DEFAULT_DETAILS))
-            .andExpect(jsonPath("$.status").value(DEFAULT_STATUS.toString()))
-            .andExpect(jsonPath("$.paymentMethod").value(DEFAULT_PAYMENT_METHOD.toString()))
-            .andExpect(jsonPath("$.paymentDate").value(DEFAULT_PAYMENT_DATE.toString()))
-            .andExpect(jsonPath("$.paymentAmount").value(DEFAULT_PAYMENT_AMOUNT.intValue()))
-            .andExpect(jsonPath("$.code").value(DEFAULT_CODE));
-    }
-    @Test
-    @Transactional
-    public void getNonExistingInvoice() throws Exception {
-        // Get the invoice
-        restInvoiceMockMvc.perform(get("/api/invoices/{id}", Long.MAX_VALUE))
-            .andExpect(status().isNotFound());
-    }
+    restInvoiceMockMvc
+      .perform(put("/api/invoices").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(updatedInvoice)))
+      .andExpect(status().isOk());
 
-    @Test
-    @Transactional
-    public void updateInvoice() throws Exception {
-        // Initialize the database
-        invoiceService.save(invoice);
+    // Validate the Invoice in the database
+    List<Invoice> invoiceList = invoiceRepository.findAll();
+    assertThat(invoiceList).hasSize(databaseSizeBeforeUpdate);
+    Invoice testInvoice = invoiceList.get(invoiceList.size() - 1);
+    assertThat(testInvoice.getDate()).isEqualTo(UPDATED_DATE);
+    assertThat(testInvoice.getDetails()).isEqualTo(UPDATED_DETAILS);
+    assertThat(testInvoice.getStatus()).isEqualTo(UPDATED_STATUS);
+    assertThat(testInvoice.getPaymentMethod()).isEqualTo(UPDATED_PAYMENT_METHOD);
+    assertThat(testInvoice.getPaymentDate()).isEqualTo(UPDATED_PAYMENT_DATE);
+    assertThat(testInvoice.getPaymentAmount()).isEqualTo(UPDATED_PAYMENT_AMOUNT);
+    assertThat(testInvoice.getCode()).isEqualTo(UPDATED_CODE);
+  }
 
-        int databaseSizeBeforeUpdate = invoiceRepository.findAll().size();
+  @Test
+  @Transactional
+  public void updateNonExistingInvoice() throws Exception {
+    int databaseSizeBeforeUpdate = invoiceRepository.findAll().size();
 
-        // Update the invoice
-        Invoice updatedInvoice = invoiceRepository.findById(invoice.getId()).get();
-        // Disconnect from session so that the updates on updatedInvoice are not directly saved in db
-        em.detach(updatedInvoice);
-        updatedInvoice
-            .date(UPDATED_DATE)
-            .details(UPDATED_DETAILS)
-            .status(UPDATED_STATUS)
-            .paymentMethod(UPDATED_PAYMENT_METHOD)
-            .paymentDate(UPDATED_PAYMENT_DATE)
-            .paymentAmount(UPDATED_PAYMENT_AMOUNT)
-            .code(UPDATED_CODE);
+    // If the entity doesn't have an ID, it will throw BadRequestAlertException
+    restInvoiceMockMvc
+      .perform(put("/api/invoices").contentType(MediaType.APPLICATION_JSON).content(TestUtil.convertObjectToJsonBytes(invoice)))
+      .andExpect(status().isBadRequest());
 
-        restInvoiceMockMvc.perform(put("/api/invoices")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(updatedInvoice)))
-            .andExpect(status().isOk());
+    // Validate the Invoice in the database
+    List<Invoice> invoiceList = invoiceRepository.findAll();
+    assertThat(invoiceList).hasSize(databaseSizeBeforeUpdate);
+  }
 
-        // Validate the Invoice in the database
-        List<Invoice> invoiceList = invoiceRepository.findAll();
-        assertThat(invoiceList).hasSize(databaseSizeBeforeUpdate);
-        Invoice testInvoice = invoiceList.get(invoiceList.size() - 1);
-        assertThat(testInvoice.getDate()).isEqualTo(UPDATED_DATE);
-        assertThat(testInvoice.getDetails()).isEqualTo(UPDATED_DETAILS);
-        assertThat(testInvoice.getStatus()).isEqualTo(UPDATED_STATUS);
-        assertThat(testInvoice.getPaymentMethod()).isEqualTo(UPDATED_PAYMENT_METHOD);
-        assertThat(testInvoice.getPaymentDate()).isEqualTo(UPDATED_PAYMENT_DATE);
-        assertThat(testInvoice.getPaymentAmount()).isEqualTo(UPDATED_PAYMENT_AMOUNT);
-        assertThat(testInvoice.getCode()).isEqualTo(UPDATED_CODE);
-    }
+  @Test
+  @Transactional
+  public void deleteInvoice() throws Exception {
+    // Initialize the database
+    invoiceService.save(invoice);
 
-    @Test
-    @Transactional
-    public void updateNonExistingInvoice() throws Exception {
-        int databaseSizeBeforeUpdate = invoiceRepository.findAll().size();
+    int databaseSizeBeforeDelete = invoiceRepository.findAll().size();
 
-        // If the entity doesn't have an ID, it will throw BadRequestAlertException
-        restInvoiceMockMvc.perform(put("/api/invoices")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(invoice)))
-            .andExpect(status().isBadRequest());
+    // Delete the invoice
+    restInvoiceMockMvc
+      .perform(delete("/api/invoices/{id}", invoice.getId()).accept(MediaType.APPLICATION_JSON))
+      .andExpect(status().isNoContent());
 
-        // Validate the Invoice in the database
-        List<Invoice> invoiceList = invoiceRepository.findAll();
-        assertThat(invoiceList).hasSize(databaseSizeBeforeUpdate);
-    }
-
-    @Test
-    @Transactional
-    public void deleteInvoice() throws Exception {
-        // Initialize the database
-        invoiceService.save(invoice);
-
-        int databaseSizeBeforeDelete = invoiceRepository.findAll().size();
-
-        // Delete the invoice
-        restInvoiceMockMvc.perform(delete("/api/invoices/{id}", invoice.getId())
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNoContent());
-
-        // Validate the database contains one less item
-        List<Invoice> invoiceList = invoiceRepository.findAll();
-        assertThat(invoiceList).hasSize(databaseSizeBeforeDelete - 1);
-    }
+    // Validate the database contains one less item
+    List<Invoice> invoiceList = invoiceRepository.findAll();
+    assertThat(invoiceList).hasSize(databaseSizeBeforeDelete - 1);
+  }
 }
